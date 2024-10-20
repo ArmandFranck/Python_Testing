@@ -5,6 +5,7 @@ from datetime import datetime
 app = Flask(__name__)  # Renommer 'server' en 'app'
 app.secret_key = 'something_special'
 
+
 def loadClubs():
     with open('clubs.json') as c:
         listOfClubs = json.load(c)['clubs']
@@ -12,26 +13,33 @@ def loadClubs():
             club['total_reserved'] = 0  # Initialiser 'total_reserved' pour chaque club
         return listOfClubs
 
+
 def loadCompetitions(today=None):
     with open('competitions.json') as comps:
         listOfCompetitions = json.load(comps)['competitions']
         if today is not None:
-            comp = [competition for competition in listOfCompetitions if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
+            comp = [competition for competition in listOfCompetitions
+                    if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
             return comp
         return listOfCompetitions
+
 
 competitions = loadCompetitions()
 clubs = loadClubs()
 today = datetime.now()
 
+
 @app.route('/')
 def index():
-    comp = [competition for competition in competitions if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
+    comp = [competition for competition in competitions
+            if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
     return render_template('index.html', clubs=clubs, competitions=comp)
+
 
 @app.route('/showSummary', methods=['POST'])
 def showSummary():
-    comp = [competition for competition in competitions if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
+    comp = [competition for competition in competitions
+            if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
     email = request.form.get('email')
     if not email:
         flash('Veuillez entrer votre adresse mail!', 'error')
@@ -43,15 +51,18 @@ def showSummary():
     club = matching_clubs[0]
     return render_template('welcome.html', club=club, competitions=comp)
 
+
 @app.route('/book/<competition>/<club>')
 def book(competition, club):
-    foundClub = [c for c in clubs if c['name'] == club][0]
-    foundCompetition = [c for c in competitions if c['name'] == competition][0]
+    foundClub = next((c for c in clubs if c['name'] == club), None)
+    foundCompetition = next((c for c in competitions if c['name'] == competition), None)
+    
     if foundClub and foundCompetition:
         return render_template('booking.html', club=foundClub, competition=foundCompetition)
     else:
         flash("Something went wrong-please try again")
         return render_template('welcome.html', club=club, competitions=competitions)
+
 
 @app.route('/purchasePlaces', methods=['POST'])
 def purchasePlaces():
@@ -89,6 +100,7 @@ def purchasePlaces():
 
     flash('Réservation réussie !')
     return render_template('welcome.html', club=club, competitions=competitions)
+
 
 @app.route('/logout')
 def logout():

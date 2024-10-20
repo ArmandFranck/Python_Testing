@@ -1,6 +1,21 @@
-from locust import HttpUser, task
+from locust import HttpUser, task, between
+import test
 
-class MyUser(HttpUser):
+class WebsiteUser(HttpUser):
+    wait_time = between(1, 2.5)
+
     @task
-    def index(self):
+    def load_main(self):
         self.client.get("/")
+
+    @task
+    def load_showSummary(self):
+        self.client.post("/showSummary", json={"email": "john@simplylift.co"})
+
+    @task
+    def load_book(self):
+        self.client.get("/book/Spring Festival/Simply Lift")
+
+    @task
+    def load_purchasePlaces(self):
+        self.client.post("/purchasePlaces", json={"competition": "Spring Festival", "club": "Simply Lift", "places": "1"})
