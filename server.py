@@ -1,39 +1,33 @@
+from flask import Flask, render_template, request, redirect, flash, url_for
 import json
-from flask import Flask,render_template,request,redirect,flash,url_for
 from datetime import datetime
 
+app = Flask(__name__)  # Renommer 'server' en 'app'
+app.secret_key = 'something_special'
 
 def loadClubs():
     with open('clubs.json') as c:
-         listOfClubs = json.load(c)['clubs']
-         for  club in listOfClubs:
-              club['total_reserved'] = 0 # Permet Initialiser 'total_reserved' pour chaque club
-         return listOfClubs
-
+        listOfClubs = json.load(c)['clubs']
+        for club in listOfClubs:
+            club['total_reserved'] = 0  # Initialiser 'total_reserved' pour chaque club
+        return listOfClubs
 
 def loadCompetitions(today=None):
     with open('competitions.json') as comps:
-         listOfCompetitions = json.load(comps)['competitions']
-         if today is not None:
-             comp = [competition for competition in listOfCompetitions if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
-             return comp
-         return listOfCompetitions
-
-
-app = Flask(__name__)
-app.secret_key = 'something_special'
+        listOfCompetitions = json.load(comps)['competitions']
+        if today is not None:
+            comp = [competition for competition in listOfCompetitions if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
+            return comp
+        return listOfCompetitions
 
 competitions = loadCompetitions()
 clubs = loadClubs()
 today = datetime.now()
+
 @app.route('/')
 def index():
     comp = [competition for competition in competitions if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
-    return render_template('index.html', clubs=clubs, competitions= comp)
-
-from flask import render_template, flash, redirect, url_for
-
-from flask import flash
+    return render_template('index.html', clubs=clubs, competitions=comp)
 
 @app.route('/showSummary', methods=['POST'])
 def showSummary():
@@ -49,22 +43,17 @@ def showSummary():
     club = matching_clubs[0]
     return render_template('welcome.html', club=club, competitions=comp)
 
-
 @app.route('/book/<competition>/<club>')
-def book(competition,club):
+def book(competition, club):
     foundClub = [c for c in clubs if c['name'] == club][0]
     foundCompetition = [c for c in competitions if c['name'] == competition][0]
     if foundClub and foundCompetition:
-        return render_template('booking.html',club=foundClub,competition=foundCompetition)
+        return render_template('booking.html', club=foundClub, competition=foundCompetition)
     else:
         flash("Something went wrong-please try again")
         return render_template('welcome.html', club=club, competitions=competitions)
 
-
-from flask import redirect, url_for, flash
-
-
-@app.route('/purchasePlaces',methods=['POST'])
+@app.route('/purchasePlaces', methods=['POST'])
 def purchasePlaces():
     competition_name = request.form.get('competition')
     club_name = request.form.get('club')
@@ -94,16 +83,12 @@ def purchasePlaces():
         flash('Vous n\'avez pas assez de points pour acheter ces billets.')
         return render_template('welcome.html', club=club, competitions=competitions)
 
-    competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
-    club['points'] = int(club['points'])-placesRequired  # Diminuer les points du club
+    competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
+    club['points'] = int(club['points']) - placesRequired  # Diminuer les points du club
     club['total_reserved'] += placesRequired  # Mettre à jour le total des places réservées
 
     flash('Réservation réussie !')
     return render_template('welcome.html', club=club, competitions=competitions)
-
-
-# TODO: Add route for points display
-
 
 @app.route('/logout')
 def logout():
