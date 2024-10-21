@@ -1,5 +1,5 @@
 from locust import HttpUser, task, between
-import test
+
 
 class WebsiteUser(HttpUser):
     wait_time = between(1, 2.5)
@@ -18,4 +18,7 @@ class WebsiteUser(HttpUser):
 
     @task
     def load_purchasePlaces(self):
-        self.client.post("/purchasePlaces", json={"competition": "Spring Festival", "club": "Simply Lift", "places": "1"})
+        self.client.post(
+            "/purchasePlaces", json={
+                "competition": "Spring Festival", "club": "Simply Lift",
+                "places": "1"})
