@@ -10,7 +10,8 @@ def loadClubs():
     with open('clubs.json') as c:
         listOfClubs = json.load(c)['clubs']
         for club in listOfClubs:
-            club['total_reserved'] = 0  # Initialiser 'total_reserved' pour chaque club
+            club['total_reserved'] = 0
+            # Initialiser 'total_reserved' pour chaque club
         return listOfClubs
 
 
@@ -19,7 +20,8 @@ def loadCompetitions(today=None):
         listOfCompetitions = json.load(comps)['competitions']
         if today is not None:
             comp = [competition for competition in listOfCompetitions
-                    if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
+                    if datetime.strptime(
+                        competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
             return comp
         return listOfCompetitions
 
@@ -32,14 +34,17 @@ today = datetime.now()
 @app.route('/')
 def index():
     comp = [competition for competition in competitions
-            if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
+            if datetime.strptime(
+                competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
     return render_template('index.html', clubs=clubs, competitions=comp)
 
 
 @app.route('/showSummary', methods=['POST'])
 def showSummary():
-    comp = [competition for competition in competitions
-            if datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S") >= today]
+    comp = [competition for competition
+            in competitions
+            if datetime.strptime(competition[
+                'date'], "%Y-%m-%d %H:%M:%S") >= today]
     email = request.form.get('email')
     if not email:
         flash('Veuillez entrer votre adresse mail!', 'error')
@@ -55,13 +60,15 @@ def showSummary():
 @app.route('/book/<competition>/<club>')
 def book(competition, club):
     foundClub = next((c for c in clubs if c['name'] == club), None)
-    foundCompetition = next((c for c in competitions if c['name'] == competition), None)
-    
+    foundCompetition = next((
+        c for c in competitions if c['name'] == competition), None)
     if foundClub and foundCompetition:
-        return render_template('booking.html', club=foundClub, competition=foundCompetition)
+        return render_template(
+            'booking.html', club=foundClub, competition=foundCompetition)
     else:
         flash("Something went wrong-please try again")
-        return render_template('welcome.html', club=club, competitions=competitions)
+        return render_template(
+            'welcome.html', club=club, competitions=competitions)
 
 
 @app.route('/purchasePlaces', methods=['POST'])
@@ -71,35 +78,44 @@ def purchasePlaces():
     places = request.form.get('places')
 
     # Recherche de la compétition et du club
-    competition = next((c for c in competitions if c['name'] == competition_name), None)
+    competition = next((
+        c for c in competitions if c['name'] == competition_name), None)
     club = next((c for c in clubs if c['name'] == club_name), None)
 
     # Vérifier si l'utilisateur a fourni toutes les données nécessaires
     if not competition or not club or not places:
         flash('Veuillez fournir toutes les informations nécessaires.')
-        return render_template('welcome.html', club=club, competitions=competitions)
+        return render_template(
+            'welcome.html', club=club, competitions=competitions)
 
     placesRequired = int(places)
 
-    # Vérifier si l'utilisateur essaie de réserver un nombre négatif ou plus de 12 billets
+    # Vérifier si l'utilisateur essaie de
+    #  réserver un nombre négatif ou plus de 12 billets
     if placesRequired <= 0:
         flash('Le nombre de billets doit être un nombre positif.')
-        return render_template('welcome.html', club=club, competitions=competitions)
+        return render_template(
+            'welcome.html', club=club, competitions=competitions)
     elif placesRequired > 12 or club['total_reserved'] + placesRequired > 12:
         flash('Vous ne pouvez pas réserver plus de 12 billets au total.')
-        return render_template('welcome.html', club=club, competitions=competitions)
+        return render_template(
+            'welcome.html', club=club, competitions=competitions)
 
     # Vérifier si le club a assez de points pour acheter les billets
     if int(club['points']) < placesRequired:
         flash('Vous n\'avez pas assez de points pour acheter ces billets.')
-        return render_template('welcome.html', club=club, competitions=competitions)
+        return render_template(
+            'welcome.html', club=club, competitions=competitions)
 
-    competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
-    club['points'] = int(club['points']) - placesRequired  # Diminuer les points du club
-    club['total_reserved'] += placesRequired  # Mettre à jour le total des places réservées
+    competition['numberOfPlaces'] = int(
+        competition['numberOfPlaces']) - placesRequired
+    club['points'] = int(club['points']) - placesRequired
+    club[
+        'total_reserved'] += placesRequired
 
     flash('Réservation réussie !')
-    return render_template('welcome.html', club=club, competitions=competitions)
+    return render_template(
+        'welcome.html', club=club, competitions=competitions)
 
 
 @app.route('/logout')
